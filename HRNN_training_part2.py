@@ -182,8 +182,8 @@ x_test = make_dataset(x_testB)
 """
 # HRNN : 계층적 RNN
 HRNN은 복잡한 시퀀스에 대해 여러 단계의 시간 내 검색을 통해 학습 할 수 있습니다.
-일반적으로, HRNN의 제 1 반복 층은 시간 - 의존 비디오 (예를 들어, 이미지들의 세트)
-벡터로. 그 다음, 제 2 반복 층은 이들 벡터 (제 1 층에 의해 부호화 됨)를 제 2 층으로 부호화한다.
+일반적으로, HRNN의 제 1 반복 층은 시간 - 의존 비디오 (예를 들어, 이미지들의 세트)벡터로.
+그 다음, 제 2 반복 층은 이들 벡터 (제 1 층에 의해 부호화 됨)를 제 2 층으로 부호화한다.
 
 첫 번째 LSTM 계층은 먼저 모양 (240, 1)의 픽셀의 모든 열을 모양 (128,)의 열 벡터로 인코딩합니다.
 두 번째 LSTM 레이어는 240 개의 열 벡터 (240, 128)를 전체 이미지를 나타내는 이미지 벡터로 인코딩합니다.
@@ -217,8 +217,15 @@ x = Input(shape=(frame, row, col))
 
 # TimeDistributed Wrapper를 사용하여 픽셀 행을 인코딩합니다.
 encoded_rows = TimeDistributed(LSTM(row_hidden))(x)
+# TimeDistributed() : 3차원 텐서 입력을 받도록 레이어를 확장(?) <- 확실한 건 출력 혹은 입력 형태(차원)를 변환 시킴
+# (x)는 LSTM의 입력 형태인거 같으나 (?) 파이썬 이해 부족으로 명확하지 않음
+# ** LSTM(메모리 셀의 개수, input_dim=입력속성의 수, input_length=시퀀스데이터의 입력 길이)  <- Dense()같은 레이어
+#		-> 메모리 셀의 개수 : 기억용량 정도와 출력 형태를 결정 지음
+#		- 주로 시계열 처리에 사용 (시계열:일정한 시간 간격의 데이터 열)
+#		- RNN의 구조 중 하나
 # 이전 계층을 사용하여 인코딩 된 행의 열을 인코딩합니다.
 encoded_columns = LSTM(col_hidden)(encoded_rows)
+# 이 두줄이 제일 노이해??????!!!!!!!!!!!!!!!!!????????????!!!!!!!!!!!
  
 ### set up prediction and compile the model  # 예측을 설정하고 모델을 컴파일하십시오.
 prediction = Dense(num_classes, activation='softmax')(encoded_columns)
@@ -258,10 +265,10 @@ numpy.random.seed(18247)  ### 반복성을 위해 랜덤으로 시드를 설정�
 # ** x_train : 학습데이터 / y_train : 결과데이터  -> 쌍을 이루어 label을 구성
 # ** label : 정답지
 for i in range(0, 30):               ### epochs의 수
-    c = list(zip(x_train, y_train))  ### 기능과 레이블을 함께 결합  # 학습데이터와 결과데이터를 합침
-    random.shuffle(c)                ### C리스트 변수의 내용을 임의의 순서대로(랜덤으로) 섞는다
+    c = list(zip(x_train, y_train))  ### 기능과 레이블을 함께 결합  # 학습데이터와 결과데이터를 합침 - label을 생성
+    random.shuffle(c)                ### C리스트 변수(label)의 내용을 임의의 순서로(랜덤으로) 섞는다
     x_shuff, y_shuff = zip(*c)       ### unzip list into shuffled features and labels  # shuffled 기능 및 레이블에 목록 압축을 푼다.
-    x_shuff = array(x_shuff); y_shuff=array(y_shuff) ### back into arrays  # 배열로 돌아가기
+    x_shuff = array(x_shuff); y_shuff=array(y_shuff) ### 배열로 변환
     
     x_batch = [x_shuff[i:i + batch_size] for i in range(0, len(x_shuff), batch_size)] ### make features into batches of 15  # 15 개의 배치로 기능 만들기
     y_batch = [y_shuff[i:i + batch_size] for i in range(0, len(x_shuff), batch_size)] ### make labels into batches of 15  # 15 개의 배치로 레이블 만들기
@@ -275,8 +282,9 @@ for i in range(0, 30):               ### epochs의 수
                   epochs=1,                          ### number of times to run through each batch  # 각 배치를 실행할 횟수
                   validation_data=(x_test, y_test),  ### validation set from up earlier in notebook  # 유효성 검사
                   callbacks=callbacks_list)          ### save if better than previous!  # 이전보다 좋으면 저장
+	# 파이썬** len() : 길이를 반환 / zip() : 동일한 개수로 이루어진 자료형을 묶음
 
-# evaluate
+# 평가 - 테스트
 scores = model.evaluate(x_test, y_test, verbose=0)    ### score model
 print('Test loss:', scores[0])                        ### test loss
 print('Test accuracy:', scores[1])                    ### test accuracy (ROC later)  # 시험 정확도
