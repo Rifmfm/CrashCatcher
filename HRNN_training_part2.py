@@ -233,6 +233,7 @@ prediction = Dense(num_classes, activation='softmax')(encoded_columns)
 # -> 활성화 함수로 softmax방법을 사용하는 유닛이 2개인 레이어 하나를 생성
 # 유닛 : 결과일 수 있는 값들 / softmax : 확률을 통한 분류
 model = Model(x, prediction)  # Dense 레이어를 모델에 추가(?)
+# Model(input,output)
 model.compile(loss='categorical_crossentropy', ### 카테고리 분류를 위한 손실함수 선택 - 확률 오차 계산
               optimizer='NAdam',               ### NAdam 최적화
               metrics=['accuracy'])            ### 정확도
@@ -293,9 +294,9 @@ print('Test accuracy:', scores[1])                    ### test accuracy (ROC lat
 
 #### 결과 확인 - ROC 곡선
 
-### 먼저, 저장된 모델을로드하고 컴파일하여 예측을 하십시오.
-model.load_weights("HRNN_pretrained_model.hdf5")
-model.compile(loss='binary_crossentropy', optimizer='Nadam', metrics=['accuracy'])
+### 먼저, 저장된 모델을 로드하고 컴파일하여 예측을 하십시오.
+model.load_weights("HRNN_pretrained_model.hdf5")  # 모델로드
+model.compile(loss='binary_crossentropy', optimizer='Nadam', metrics=['accuracy'])  # 모델 설정
 
 ### make the holdout test dataset for prediction and comparison
 # 예측과 비교를위한 홀드 아웃 테스트 데이터 세트 만들기
