@@ -273,30 +273,35 @@ for i in range(0, 30):               ### epochs의 수
     
     x_batch = [x_shuff[i:i + batch_size] for i in range(0, len(x_shuff), batch_size)] ### make features into batches of 15  # 15 개의 배치로 기능 만들기
     y_batch = [y_shuff[i:i + batch_size] for i in range(0, len(x_shuff), batch_size)] ### make labels into batches of 15  # 15 개의 배치로 레이블 만들기
+	# x_shuff[i+15]
+	# for문 : 0부터 x_shuff의 길이까지 batch_size(15)단위로  -> i=0,15,30...
+	# [i:i] : i부터 i까지
 
     for j,xb in enumerate(x_batch):  ### for each batch in the shuffled list for this epoch
+		# enumerate(열거하다) : 인덱스 값과 값을 같이 반환 
         xx = make_dataset(xb)        ### load the feature data into arrays  # 기능데이터를 배열로 로드
         yy = y_batch[j]              ### set the labels for the batch  # 배치의 라벨을 설정
         
+		# 학습
         model.fit(xx, yy,                            ### fit training data  # 맞춤 훈련 데이터
                   batch_size=len(xx),                ### reiterate batch size - in this case we already set up the batches  # 배치 크기를 반복 (이 경우 이미 배치를 설정함)
                   epochs=1,                          ### number of times to run through each batch  # 각 배치를 실행할 횟수
                   validation_data=(x_test, y_test),  ### validation set from up earlier in notebook  # 유효성 검사
                   callbacks=callbacks_list)          ### save if better than previous!  # 이전보다 좋으면 저장
 	# 파이썬** len() : 길이를 반환 / zip() : 동일한 개수로 이루어진 자료형을 묶음
+	# -> 완료시 모델에 학습된 결과물을 저장 - 모델에 처리할 연산들이 채워져 있는 상태
 
-# 평가 - 테스트
+# 평가 - 테스트자료를 가지고 모델평가
 scores = model.evaluate(x_test, y_test, verbose=0)    ### score model
 print('Test loss:', scores[0])                        ### test loss
 print('Test accuracy:', scores[1])                    ### test accuracy (ROC later)  # 시험 정확도
 
 
-
 #### 결과 확인 - ROC 곡선
 
 ### 먼저, 저장된 모델을 로드하고 컴파일하여 예측을 하십시오.
-model.load_weights("HRNN_pretrained_model.hdf5")  # 모델로드
-model.compile(loss='binary_crossentropy', optimizer='Nadam', metrics=['accuracy'])  # 모델 설정
+model.load_weights("HRNN_pretrained_model.hdf5")  # 모델로드 - 학습을 다시 하지 않아도 됨
+model.compile(loss='binary_crossentropy', optimizer='Nadam', metrics=['accuracy'])  # 모델 학습 방식 설정
 
 ### make the holdout test dataset for prediction and comparison
 # 예측과 비교를위한 홀드 아웃 테스트 데이터 세트 만들기
@@ -309,27 +314,30 @@ ys = [y_train, y_test, y_testA]                        ### set up labels to be i
 labs = ['Train', 'Valid', 'Test']                      ### set up tags to be iterated through  # 반복되는 태그 설정
 col = ['#4881ea', 'darkgreen', 'maroon']               ### set up colors to be iterated through  # 반복되는 색 설정
 preds = []                                             ### set up prediction as empty array to populate  # 예측 저장할 배열
-for i,xset in enumerate([x_train, x_testB, x_testA]):  ### iterate through each set of data  # 각 데이터 세트를 반복
-    if i==0:
+for i,xset in enumerate([x_train, x_testB, x_testA]):  ### 인덱스값(i)과 값(xset)을 같이 반환
+    if i==0:  # for문 처음 한번
         new_pred = []                                  ### for first dataset, need to iterate through each  # 첫 번째 데이터 집합의 경우 각각을 반복해야합니다.
         for k in xset:                                 ### 메모리 절약 (한 번에 모든 것을로드 할 수 없기 때문)
             d = make_dataset([k])                
-            new_pred.append(model.predict(d))          ### predictions with loaded model for each in training set  # 트레이닝 세트의 각 모델에 대한로드 된 모델을 사용한 예측
+            new_pred.append(model.predict(d))          ### predictions with loaded model for each in training set  # 트레이닝 세트의 각 모델에 대한 로드 된 모델을 사용한 예측
         new_pred = array(new_pred).reshape((len(new_pred),2))
     else:
         d = make_dataset(xset)                         ### can load all of valid/test datasets at once in memory  # 모든 유효한 / 테스트 데이터 세트를 메모리에 한 번에로드 할 수 있습니다.
         new_pred = model.predict(d)                    ### predictions with loaded model for each valid/test dataset  # 각 유효 / 테스트 데이터 세트에 대해로드 된 모델로 예측
     preds.append(new_pred)
-    fpr, tpr, threshs = sklearn.metrics.roc_curve(ys[i][:,1], new_pred[:,1]) ### get the false pos rate and true pos rate
+    # append() : 맨뒤에 요소 추가
+	# predict(데이터) : 데이터를 가지고 모델이 학습한대로 연산,처리를 하고 결과를 리턴
+	fpr, tpr, threshs = sklearn.metrics.roc_curve(ys[i][:,1], new_pred[:,1]) ### get the false pos rate and true pos rate
     plot(fpr, tpr, '-', color=col[i], alpha=0.7, lw=1.5, label=labs[i])      ### plot the ROC curve with false pos rate and true pos rate  # ROC곡선 그리기
-    
+
+
     print labs[i]
     print sklearn.metrics.auc(fpr, tpr)                ### print area under curve for each set
     print sklearn.metrics.accuracy_score(ys[i][:,1], [round(j) for j in new_pred[:,1]])   ### print accuracy for each set
     print sklearn.metrics.confusion_matrix(ys[i][:,1], [round(j) for j in new_pred[:,1]]) ### print confusion matrix for each
     
 xlabel('False Positive Rate'); ylabel('True Positive Rate')
-plt.legend(fancybox=True, loc=4, prop={'size':10})
+plt.legend(fancybox=True, loc=4, prop={'size':10})  # 범례 - legend(loc=위치)
 plt.show()
 
 

@@ -325,6 +325,7 @@ plt.show()
 plot([0,1],[0,1],'k:',alpha=0.5)                  ### plot the "by chance" line - trying so hard to be better than this...
 for i,p in enumerate(preds):                      ### for each of the calculated predictions, make a histogram
     hist(p[:,1], bins = arange(0,1,0.05), histtype='stepfilled', color=col[i], alpha=0.7, label=labs[i]
+	# 데이터시각화			# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 닫는 괄호가 없어!!!!!!!!!!??????  )
 xlabel('False Positive Rate'); ylabel('True Positive Rate')
 plt.legend(fancybox=True, loc=2, prop={'size':10})
 plt.show()
